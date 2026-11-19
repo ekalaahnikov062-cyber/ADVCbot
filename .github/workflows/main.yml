@@ -1,0 +1,46 @@
+
+name: Build ADVCbot for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build ADVCbot EXE
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed `
+            --name ADVCbot `
+            --icon advcboticon.ico `
+            ADVCbot.py
+
+          Copy-Item advcboticon.ico dist/advcboticon.ico
+
+      - name: Upload ready EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADVCbot-Windows-x64
+          path: |
+            dist/ADVCbot.exe
+            dist/advcboticon.ico
+          if-no-files-found: error
+          retention-days: 30
